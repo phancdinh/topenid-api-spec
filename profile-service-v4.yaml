@@ -3,17 +3,8 @@ info:
   title: Profile service
   version: v4
 servers:
-  - url: https://{envDomain}/{basePath}/{version}
+  - url: https://api-sandbox.topenid.com.vn/api/profiles/v4
     description: The root TopenID server
-    variables:
-      envDomain:
-        enum:
-          - api-sandbox.topenid.com.vn
-        default: api-sandbox.topenid.com.vn
-      basePath:
-        default: api/profiles
-      version:
-        default: v4
 tags:
   - name: Account APIs
   - name: OTP APIs

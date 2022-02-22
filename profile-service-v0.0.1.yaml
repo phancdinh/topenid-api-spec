@@ -3,17 +3,8 @@ info:
   title: Profile service
   version: v0.0.1
 servers:
-  - url: https://{envPrefix}.citizen.com.vn/{basePath}/{version}
+  - url: https://api-sandbox.citizen.com.vn/api/profiles/v0.0.1
     description: The root TopenID server
-    variables:
-      envPrefix:
-        enum:
-          - api-sandbox
-        default: api-sandbox
-      basePath:
-        default: api/profiles
-      version:
-        default: v0.0.1
 paths:
   /info/{htId}/basic-info:
     get:

@@ -3,17 +3,8 @@ info:
   title: Auth service
   version: v3
 servers:
-  - url: https://{envPrefix}.citizen.com.vn/{basePath}/{version}
+  - url: https://api-sandbox.citizen.com.vn/api/auth/v3
     description: The root TopenID server
-    variables:
-      envPrefix:
-        enum:
-          - api-sandbox
-        default: api-sandbox
-      basePath:
-        default: api/auth
-      version:
-        default: v3
 tags:
   - name: Authentication APIs
     description: Group of APIs to authenticate users and relying parties

@@ -4,6 +4,7 @@ info:
   version: v1.0.0
 servers:
   - url: https://api-sandbox.citizen.com.vn/api/auth/v1.0.0
+    description: The root TopenID server
 tags:
   - name: Authentication Apis
     description: Group of APIs to authenticate users and relying parties

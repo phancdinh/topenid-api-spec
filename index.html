@@ -40,9 +40,14 @@
     window.onload = function() {
       const queryString = window.location.search;
       console.log(window.location + ' ' + queryString);
+      
+      const urlParams = new URLSearchParams(queryString);
+      const service = urlParams.get('service')
+      console.log(service);
+
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
-        url: "auth-service-v3.yaml",
+        url: service + ".yaml",
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [

@@ -3,7 +3,7 @@ info:
   title: Auth service
   version: v3
 servers:
-  - url: https://api-sandbox.citizen.com.vn/api/auth/v3
+  - url: https://api-sandbox.topenid.com.vn/api/auth/v3
     description: The root TopenID server
 tags:
   - name: Authentication APIs

@@ -36,7 +36,10 @@
     <script src="dist/swagger-ui-bundle.js" charset="UTF-8"> </script>
     <script src="dist/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
     <script>
+    
     window.onload = function() {
+      const queryString = window.location.search;
+      console.log(window.location + ' ' + queryString);
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
         url: "auth-service-v3.yaml",

@@ -1,0 +1,3407 @@
+openapi: 3.0.1
+info:
+  title: Profile service
+  version: v4
+servers:
+  - url: https://{envDomain}/{basePath}/{version}
+    description: The root TopenID server
+    variables:
+      envDomain:
+        enum:
+          - api-sandbox.topenid.com.vn
+        default: api-sandbox.topenid.com.vn
+      basePath:
+        default: api/profiles
+      version:
+        default: v4
+tags:
+  - name: Account APIs
+  - name: OTP APIs
+  - name: Consents APIs
+  - name: Contact Info APIs
+paths:
+  /account/registration:
+    post:
+      tags:
+        - Account APIs
+      security:
+        - bearerAuth: []
+      operationId: registerAccount
+      summary: Register an account with a verified phone number
+      description: This API requires RP access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationWithPhoneRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        required:
+                          - ht_id
+                        properties:
+                          ht_id:
+                            type: string
+              examples:
+                update_successful:
+                  summary: Registration successful
+                  value:
+                    data:
+                      ht_id: '2828917688328040'
+                    message: The request completed successfully
+                    code: null
+                    status: SUCCESS
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                verification_id_null:
+                  summary: Verification id null or blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: verification_id cannot be blank
+                verification_incorrect:
+                  summary: Verification invalid
+                  value:
+                    data: null
+                    code: '202004'
+                    status: FAILURE
+                    message: Incorrect verification
+                verification_not_found:
+                  summary: Verification not belong to client
+                  value:
+                    data: null
+                    code: '202002'
+                    status: FAILURE
+                    message: verification_id cannot be found
+                phone_number_existed:
+                  summary: Phone number already registered
+                  value:
+                    data: null
+                    code: '202006'
+                    status: FAILURE
+                    message: phone has been set as the primary contact of another account
+                first_name_null:
+                  summary: First name null or blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: first_name cannot be blank
+                first_name_too_long:
+                  summary: First name too long
+                  value:
+                    data: null
+                    code: '200004'
+                    status: FAILURE
+                    message: first_name's length must be less than 256
+                last_name_null:
+                  summary: Last name null or blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: last_name cannot be blank
+                last_name_too_long:
+                  summary: Last name too long
+                  value:
+                    data: null
+                    code: '200004'
+                    status: FAILURE
+                    message: last_name's length must be less than 256
+                password_null:
+                  summary: Password null
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: password cannot be blank
+                password_invalid_format:
+                  summary: Invalid password format
+                  value:
+                    data: null
+                    code: '200010'
+                    status: FAILURE
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+                dob_invalid_format:
+                  summary: Date of birth invalid format
+                  value:
+                    data: null
+                    code: '200002'
+                    status: FAILURE
+                    message: Invalid dob format
+                dob_user_under_18:
+                  summary: User under 18
+                  value:
+                    data: null
+                    code: '203004'
+                    status: FAILURE
+                    message: Date of birth must be dd/MM/yyyy or earlier
+                gender_not_in_supported_list:
+                  summary: Gender invalid
+                  value:
+                    data: null
+                    code: '200003'
+                    status: FAILURE
+                    message: gender isn't in supported list
+                consent_receipt_is_null:
+                  summary: consent receipt is null
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: consent_receipt cannot be blank
+                invalid_consent_receipt:
+                  summary: Invalid consent receipt
+                  value:
+                    data: null
+                    code: '203022'
+                    status: FAILURE
+                    message: Invalid consent receipt
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /account/update-password:
+    put:
+      tags:
+        - Account APIs
+      security:
+        - bearerAuth: []
+      operationId: updatePassword
+      summary: Update password of user
+      description: This API requires User access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UpdatePasswordResponse'
+              examples:
+                update_successful:
+                  summary: Update Successful
+                  value:
+                    data:
+                      ht_id: '2828917688328040'
+                    message: The request completed successfully
+                    code: null
+                    status: SUCCESS
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                current_password_blank:
+                  summary: current_password cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: current_password cannot be blank
+                new_password_blank:
+                  summary: new_password cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: new_password cannot be blank
+                new_password_invalid:
+                  summary: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+                  value:
+                    data: null
+                    code: '200010'
+                    status: FAILURE
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+                new_password_match_old_password:
+                  summary: The new password cannot be the same as the current password
+                  value:
+                    data: null
+                    code: '201001'
+                    status: FAILURE
+                    message: The new password cannot be the same as the current password
+                current_password_wrong:
+                  summary: The Current Password is incorrect
+                  value:
+                    data: null
+                    code: '203001'
+                    status: FAILURE
+                    message: The Current Password is incorrect
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                user_profile_not_found:
+                  summary: User profile not found
+                  value:
+                    data: null
+                    code: '101101'
+                    status: FAILURE
+                    message: User profile was not found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /account/self-reset-password:
+    patch:
+      security:
+        - bearerAuth: []
+      tags:
+        - Account APIs
+      operationId: resetPassword
+      summary: Reset password on behalf of user
+      description: This API allows RP using the client access token to reset password on behalf of user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        nullable: true
+                        example: null
+              examples:
+                reset-password-successful:
+                  summary: RP reset password for user successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data: null
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                verification_id_blank:
+                  summary: verification_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: verification_id cannot be blank
+                password_blank:
+                  summary: password cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: password cannot be blank
+                password_invalid_format:
+                  summary: Invalid password format
+                  value:
+                    data: null
+                    code: '200010'
+                    status: FAILURE
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+                incorrect_verification:
+                  summary: Incorrect verification
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202004'
+                    message: Incorrect verification
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /account/force-password-reset:
+    patch:
+      security:
+        - bearerAuth: []
+      tags:
+        - Account APIs
+      operationId: forceResetPassword
+      summary: RP force reset password for user
+      description: This API requires RP access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForceResetPasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        nullable: true
+                        example: null
+              examples:
+                reset-password-successful:
+                  summary: RP reset password for user successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data: null
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                username_blank:
+                  summary: username cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: username cannot be blank
+                current_password_blank:
+                  summary: current_password cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: current_password cannot be blank
+                new_password_blank:
+                  summary: new_password cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: new_password cannot be blank
+                new_password_invalid_format:
+                  summary: Invalid password format
+                  value:
+                    data: null
+                    code: '200010'
+                    status: FAILURE
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+                new_password_match_old_password:
+                  summary: The new password cannot be the same as the current password
+                  value:
+                    data: null
+                    code: '201001'
+                    status: FAILURE
+                    message: The new password cannot be the same as the current password
+                incorrect_username:
+                  summary: Username / Current password is incorrect
+                  value:
+                    data: null
+                    code: '203035'
+                    status: FAILURE
+                    message: Invalid user credentials
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /consent/purposes/relying-party:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Consents APIs
+      operationId: getConsentByReplyingParty
+      summary: Fetch the consent purposes list of RP
+      description: This API requires Relying Party Access Token.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SubscriptionConsentDto'
+              examples:
+                retrieve_successful:
+                  summary: Retrieve available consent items successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      - id: 6127092044a4750a8bd857ba
+                        name: Basic info sharing
+                        description: Basic info sharing
+                        mandatory: true
+                        owner: TopenId
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                access_denied:
+                  summary: Access denied
+                  value:
+                    status: FAILURE
+                    code: '203016'
+                    message: Access denied
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /account/{ht_id}/consent-receipts:
+    get:
+      parameters:
+        - name: ht_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      tags:
+        - Consents APIs
+      operationId: getConsentReceiptByHtId
+      summary: Fetch the consent receipt list of user
+      description: This API requires Relying Party Access Token.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConsentReceiptResponse'
+              examples:
+                retrieve_successful:
+                  summary: Retrieve available consent receipts successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      - id: 6127092044a4750a8bd857ba
+                        name: Thông tin tài khoản
+                        description: Truy xuất thông tin tài khoản TopenID
+                        consented_date: '1625454349735'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                ht_id_blank:
+                  summary: ht_id null or blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: ht_id cannot be blank
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                access_denied:
+                  summary: Access denied
+                  value:
+                    status: FAILURE
+                    code: '203016'
+                    message: Access denied
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: ht_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: ht_id cannot be found
+                ht_id_is_empty:
+                  summary: ht_id is empty
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200007'
+                    message: The requested resource cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /verifications:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - OTP APIs
+      operationId: createVerification
+      summary: 'Generate and deliver OTP to  receiver channel (email/ phone) '
+      description: This API requires Relying Party or user access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationCreationRequest'
+            example:
+              receiver: '0377884111'
+              channel: PHONE
+              template_code: SMS_OTP_REQUESTED_012
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationResponse'
+              examples:
+                create_verification_successful:
+                  summary: create verification successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      verification:
+                        id: 6168e5673e828a5cfc655989
+                        ht_id: '1630658722275094'
+                        receiver: '0382479888'
+                        channel: PHONE
+                        verified: 'false'
+                        expired_at: '1625454349735'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                receiver_cannot_be_blank:
+                  summary: receiver cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: receiver cannot be blank
+                receiver_format_error:
+                  summary: receiver has invalid format
+                  value:
+                    data: null
+                    code: '200002'
+                    status: FAILURE
+                    message: Invalid receiver format
+                channel_cannot_be_blank:
+                  summary: channel cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: channel cannot be blank
+                channel_invalid:
+                  summary: channel isn't in supported list
+                  value:
+                    data: null
+                    code: '200003'
+                    status: FAILURE
+                    message: channel isn't in supported list
+                template_code_cannot_be_blank:
+                  summary: template_code cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: template_code cannot be blank
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '203008'
+                status: FAILURE
+                message: The number of times requesting to issue OTP have reached the limitation
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /verifications/{verification_id}:
+    patch:
+      parameters:
+        - name: verification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      tags:
+        - OTP APIs
+      operationId: updateVerification
+      summary: Request to update verification
+      description: This API requires Relying Party or user access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationUpdatedRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationResponse'
+              examples:
+                verified_otp_successful:
+                  summary: verified otp successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      verification:
+                        id: 6168e5673e828a5cfc655989
+                        ht_id: '1630658722275094'
+                        receiver: '0382479888'
+                        channel: PHONE
+                        verified: 'true'
+                        expired_at: '1625454349735'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                invalid_blank_verification_id:
+                  summary: verification_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: verification_id cannot be blank
+                invalid_blank_otp:
+                  summary: otp cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: otp cannot be blank
+                verification_is_verified:
+                  summary: Incorrect verification
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202004'
+                    message: Incorrect verification
+                incorrect_otp:
+                  summary: Incorrect OTP
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '201002'
+                    message: Incorrect OTP
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                status: FAILURE
+                code: '203015'
+                message: Invalid access token
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: verification_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: verification_id cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                status: FAILURE
+                code: '100500'
+                message: Error detail message
+  /basic-info:
+    get:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: getBasicInfo
+      summary: Get basic info of a user profile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicInfoResponseData'
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+    patch:
+      security:
+        - bearerAuth: []
+      tags:
+        - Contact Info APIs
+      operationId: updateBasicInfo
+      summary: Update basic info of a user profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileBasicInfoUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        nullable: true
+                        example: null
+              examples:
+                update_successful:
+                  summary: Update Successful
+                  value:
+                    data: null
+                    message: The request completed successfully
+                    code: null
+                    status: SUCCESS
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                lastname_invalid:
+                  summary: Last name is blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: lastname cannot be blank
+                lastname_invalid_length_too_long:
+                  summary: Last name too long
+                  value:
+                    data: null
+                    code: '200004'
+                    status: FAILURE
+                    message: last_name's length must be less than 256
+                firstname_invalid:
+                  summary: First & middle name is blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: first_name cannot be blank
+                firstname_invalid_length_too_long:
+                  summary: First & middle name too long
+                  value:
+                    data: null
+                    code: '200004'
+                    status: FAILURE
+                    message: first_name's length must be less than 256
+                gender_blank:
+                  summary: Gender is blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: gender cannot be blank
+                gender_invalid:
+                  summary: Gender invalid
+                  value:
+                    data: null
+                    code: '200003'
+                    status: FAILURE
+                    message: gender isn't in supported list
+                dob_blank:
+                  summary: Dob is blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: dob cannot be blank
+                dob_invalid:
+                  summary: Dob invalid format
+                  value:
+                    data: null
+                    code: '200002'
+                    status: FAILURE
+                    message: Invalid dob format
+                user_under_18:
+                  summary: User under 18
+                  value:
+                    data: null
+                    code: '203004'
+                    status: FAILURE
+                    message: Date of birth must be 15/11/2003 or earlier
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                user_profile_not_found:
+                  summary: User profile not found
+                  value:
+                    data: null
+                    code: '101101'
+                    status: FAILURE
+                    message: User profile was not found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contacts:
+    get:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: getListContactInfo
+      summary: Retrieve contact list (emails, phones, postal addresses) of a user profile
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PHONE
+              - EMAIL
+              - POSTAL_ADDRESS
+            example: PHONE
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonalContactInfoResponse'
+              examples:
+                default:
+                  summary: Type is not passed
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      emails:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: string
+                          last_modified_date: 1625454349735
+                      phones:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: string
+                          last_modified_date: 1625454349735
+                      addresses:
+                        - id: string
+                          primary: true
+                          verified: false
+                          tags: null
+                          value: string
+                          city: string
+                          city_code: string
+                          district: string
+                          district_code: string
+                          ward: string
+                          ward_code: string
+                          other: string
+                          last_modified_date: 1625454349735
+                    status: SUCCESS
+                    code: null
+                type_is_email:
+                  summary: Type Email
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      emails:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: string
+                          last_modified_date: 1625454349735
+                      phones: []
+                      addresses: []
+                    status: SUCCESS
+                    code: null
+                type_is_phones:
+                  summary: Type Phone
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      phones:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: string
+                          last_modified_date: 1625454349735
+                      addresses: []
+                      emails: []
+                    status: SUCCESS
+                    code: null
+                type_is_address:
+                  summary: Type Address
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      addresses:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: string
+                          city: string
+                          city_code: string
+                          district: string
+                          district_code: string
+                          ward: string
+                          ward_code: string
+                          other: string
+                          last_modified_date: 1625454349735
+                      emails: []
+                      phones: []
+                    status: SUCCESS
+                    code: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                not_supported_list:
+                  summary: Contact type isn't in supported list
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200003'
+                    message: type isn't in supported list
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/phones:
+    get:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: getContactPhone
+      summary: Retrieve phone list of a user profile
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PhoneContactInfoResponse'
+              examples:
+                type_is_phone:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      phones:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: '0382477999'
+                          last_modified_date: 1625454349735
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+    post:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: addPhoneNumber
+      summary: Add a phone number to the profile's contact
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPhoneNumberRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ContactPhoneNumberResponse'
+              examples:
+                request completed successfully:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    status: SUCCESS
+                    code: null
+                    data:
+                      ht_id: '2828917688328040'
+                      phone:
+                        id: '4908094882488354'
+                        value: '0912345678'
+                        primary: false
+                        verified: true
+                        tags: null
+                        last_modified_date: 1625454349735
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                verification_id_blank:
+                  summary: Verification_id null or blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: verification_id cannot be blank
+                verification_id_incorrect:
+                  summary: Verification_id incorrect
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202004'
+                    message: Incorrect verification
+                verification_id_not_belong_to_client:
+                  summary: Verification does not belong to Client
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202002'
+                    message: verification_id cannot be found
+                phone_blank:
+                  summary: Phone null or blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: phone cannot be blank
+                phone_invalid_format:
+                  summary: Invalid  phone format
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200002'
+                    message: Invalid phone format
+                phone_existed:
+                  summary: Phone already exists
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202001'
+                    message: phone has already existed
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/phones/{phone_id}:
+    delete:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: deleteContactPhone
+      summary: Delete phone of the profile
+      parameters:
+        - name: phone_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data: {}
+              examples:
+                default:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    status: SUCCESS
+                    code: null
+                    data: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                phone_id cannot be blank:
+                  summary: phone_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: phone_id cannot be blank
+                phone_is_primary_contact:
+                  summary: cannot delete a primary contact
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202005'
+                    message: Cannot delete a primary contact
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: phone_id cannot be found
+                code: '202007'
+                status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/emails:
+    get:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: getContactEmail
+      summary: Retrieve email list of a user profile
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/EmailContactInfoResponse'
+              examples:
+                type_is_email:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      emails:
+                        - id: string
+                          primary: true
+                          verified: true
+                          tags: null
+                          value: string
+                          last_modified_date: 1625454349735
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+    post:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: addContactEmail
+      summary: Add email address to the profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactEmailAddingRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ContactEmailAddingResponse'
+              examples:
+                default:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      email:
+                        id: string
+                        primary: false
+                        verified: false
+                        tags: null
+                        value: string
+                        last_modified_date: 1625454349735
+                    status: SUCCESS
+                    code: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                email_blank:
+                  summary: email cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: email cannot be blank
+                invalid_email:
+                  summary: email has invalid format
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200002'
+                    message: Invalid email format
+                email_existed:
+                  summary: email existed
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202001'
+                    message: email has already existed
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/emails/{email_id}/verification:
+    put:
+      parameters:
+        - name: email_id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: verifyContactEmail
+      summary: Verify email address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactEmailVerificationRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ContactEmailVerificationResponse'
+              examples:
+                default:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      email:
+                        id: string
+                        primary: false
+                        verified: true
+                        tags: null
+                        value: string
+                        last_modified_date: 1625454349735
+                    status: SUCCESS
+                    code: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                verification_id_blank:
+                  summary: verification_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: verification_id cannot be blank
+                invalid_email:
+                  summary: email_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: email_id cannot be blank
+                incorrect_verification.:
+                  summary: Incorrect verification
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202004'
+                    message: Incorrect verification
+                email_already_verified:
+                  summary: email has already been verified
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203009'
+                    message: The email has already been verified
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: email_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: email_id cannot be found
+                email_id_is_empty:
+                  summary: email_id is empty
+                  value:
+                    data: null
+                    code: '200007'
+                    status: FAILURE
+                    message: The requested resource cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/emails/{email_id}/primary:
+    put:
+      parameters:
+        - name: email_id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: setPrimaryEmail
+      summary: Set Primary email of an account
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data: {}
+              examples:
+                set_primary_email_successful:
+                  summary: Set primary email successful
+                  value:
+                    data: null
+                    message: The request completed successfully
+                    code: null
+                    status: SUCCESS
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                email_id_blank:
+                  summary: email_id is blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: email_id cannot be blank
+                email_has_been_used_as_primary:
+                  summary: Email is primary of another account
+                  value:
+                    data: null
+                    code: '202006'
+                    status: FAILURE
+                    message: email has been set as the primary contact of another account
+                email_unverified:
+                  summary: Email is unverified
+                  value:
+                    data: null
+                    code: '203003'
+                    status: FAILURE
+                    message: Cannot set primary for an unverified email
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: Email id does not belong to user
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: email_id cannot be found
+                email_id_is_empty:
+                  summary: email_id is empty
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200007'
+                    message: The requested resource cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/emails/{email_id}:
+    delete:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: deleteContactEmail
+      summary: Delete email of the profile
+      parameters:
+        - name: email_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data: {}
+              examples:
+                default:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    status: SUCCESS
+                    code: null
+                    data: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                email_id cannot be blank:
+                  summary: email_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: email_id cannot be blank
+                email_is_primary_contact:
+                  summary: cannot delete a primary contact
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202005'
+                    message: Cannot delete a primary contact
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: email_id cannot be found
+                code: '202007'
+                status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/addresses:
+    get:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: getContactAddress
+      summary: Retrieve address list of a user profile
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AddressContactInfoResponse'
+              examples:
+                type_is_email:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      ht_id: '2828917688328040'
+                      addresses:
+                        - id: string
+                          primary: true
+                          verified: false
+                          tags: null
+                          value: string
+                          city: string
+                          city_code: string
+                          district: string
+                          district_code: string
+                          ward: string
+                          ward_code: string
+                          other: string
+                          last_modified_date: 1625454349735
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+    post:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: addContactAddress
+      summary: Add address to the profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactAddressAddingRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ContactAddressResponse'
+              examples:
+                default:
+                  summary: Add address successfully
+                  value:
+                    message: The request completed successfully
+                    status: SUCCESS
+                    code: null
+                    data:
+                      ht_id: '2828917688328040'
+                      address:
+                        id: string
+                        value: string
+                        other: string
+                        ward_code: string
+                        ward: string
+                        district_code: string
+                        district: string
+                        city_code: string
+                        city: string
+                        primary: true
+                        verified: false
+                        tags: null
+                        last_modified_date: 1625454349735
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                detail_address_blank:
+                  summary: detail_address cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: detail_address cannot be blank
+                detail_address_over_max_length:
+                  summary: detail_address cannot over max length
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200004'
+                    message: detail_address's length must be less than 256
+                ward_code_blank:
+                  summary: ward_code cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: ward_code cannot be blank
+                district_code_blank:
+                  summary: district_code cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: district_code cannot be blank
+                city_code_blank:
+                  summary: city_code cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: city_code cannot be blank
+                city_code_can_not_found:
+                  summary: city_code cannot be found
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203005'
+                    message: Province/City Code <city_code> cannot be found
+                ward_code_district_code_not_matched:
+                  summary: ward_code and district_code not matched
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203006'
+                    message: Ward Code <ward_code> and District Code <district_code> were not matched
+                district_code_city_code_not_matched:
+                  summary: district_code and city_code not found matched
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203007'
+                    message: District Code <district_code> and Province/City Code <city_code> were not matched
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/addresses/{address_id}/primary:
+    put:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: setPrimaryAddress
+      summary: Set Primary Address of an account
+      parameters:
+        - name: address_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data: {}
+              examples:
+                set_primary_email_successful:
+                  summary: Set primary address successful
+                  value:
+                    data: null
+                    message: The request completed successfully
+                    code: null
+                    status: SUCCESS
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                contact_id_blank:
+                  summary: address_id is blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: address_id cannot be blank
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: address_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: address_id cannot be found
+                address_id_is_empty:
+                  summary: address_id is empty
+                  value:
+                    data: null
+                    code: '200007'
+                    status: FAILURE
+                    message: The requested resource cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /contact/addresses/{address_id}:
+    put:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: updateContactAddress
+      summary: Update address of the profile
+      parameters:
+        - name: address_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactAddressUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ContactAddressResponse'
+              examples:
+                default:
+                  summary: Update address successfully
+                  value:
+                    message: The request completed successfully
+                    status: SUCCESS
+                    code: null
+                    data:
+                      ht_id: '2828917688328040'
+                      address:
+                        id: string
+                        value: string
+                        other: string
+                        ward_code: string
+                        ward: string
+                        district_code: string
+                        district: string
+                        city_code: string
+                        city: string
+                        primary: true
+                        verified: false
+                        tags: null
+                        last_modified_date: 1625454349735
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                id_blank:
+                  summary: address_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: address_id cannot be blank
+                detail_address_blank:
+                  summary: detail_address cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: detail_address cannot be blank
+                detail_address_over_max_length:
+                  summary: detail_address cannot over max length
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200004'
+                    message: detail_address's length must be less than 256
+                ward_code_blank:
+                  summary: ward_code cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: ward_code cannot be blank
+                district_code_blank:
+                  summary: district_code cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: district_code cannot be blank
+                city_code_blank:
+                  summary: city_code cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: city_code cannot be blank
+                city_code_can_not_found:
+                  summary: city_code cannot be found
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203005'
+                    message: Province/City Code <city_code> cannot be found
+                ward_code_district_code_not_matched:
+                  summary: ward_code and district_code not matched
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203006'
+                    message: Ward Code <ward_code> and District Code <district_code> were not matched
+                district_code_city_code_not_matched:
+                  summary: district_code and city_code not found matched
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203007'
+                    message: District Code <district_code> and Province/City Code <city_code> were not matched
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Address id does not belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: address_id cannot be found
+                code: '202007'
+                status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+    delete:
+      tags:
+        - Contact Info APIs
+      security:
+        - bearerAuth: []
+      operationId: deleteContactAddress
+      summary: Delete address of the profile
+      parameters:
+        - name: address_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data: {}
+              examples:
+                default:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    status: SUCCESS
+                    code: null
+                    data: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                contact_id cannot be blank:
+                  summary: address_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: address_id cannot be blank
+                contact_is_primary_contact:
+                  summary: cannot delete a primary contact
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202005'
+                    message: Cannot delete a primary contact
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Address id does not belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: address_id cannot be found
+                code: '202007'
+                status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ResponseData:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          example: null
+        status:
+          type: string
+          example: SUCCESS
+          enum:
+            - SUCCESS
+            - FAILURE
+        code:
+          type: string
+          nullable: true
+          example: null
+    ErrorResponseData:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+          example: null
+          description: Data is null when we got an error.
+        status:
+          type: string
+          example: FAILURE
+          enum:
+            - SUCCESS
+            - FAILURE
+        code:
+          type: string
+          description: TBD, error code of detail error.
+    RegistrationWithPhoneRequest:
+      type: object
+      required:
+        - verification_id
+        - first_name
+        - last_name
+        - password
+        - consent_receipt
+      properties:
+        verification_id:
+          type: string
+          example: 617bab262684b5432c0ab9bf
+        first_name:
+          type: string
+          maxLength: 255
+          example: Thảo Nguyên
+        last_name:
+          type: string
+          maxLength: 255
+          example: Trần
+        password:
+          type: string
+          minLength: 8
+          maxLength: 30
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+        gender:
+          type: string
+          example: FEMALE
+          enum:
+            - MALE
+            - FEMALE
+            - OTHER
+        dob:
+          type: string
+          description: Date of birth. In format dd/MM/yyyy.
+          example: 20/01/1990
+        consent_receipt:
+          type: array
+          description: A list of consent purpose ID
+          items:
+            type: string
+            example: 61c870402b9c37dfa3220c21
+    UpdatePasswordRequest:
+      type: object
+      required:
+        - current_password
+        - new_password
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+    UpdatePasswordResponse:
+      type: object
+      required:
+        - ht_id
+      properties:
+        ht_id:
+          type: string
+    ResetPasswordRequest:
+      type: object
+      required:
+        - verification_id
+        - password
+      properties:
+        verification_id:
+          type: string
+        password:
+          type: string
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+    ForceResetPasswordRequest:
+      type: object
+      required:
+        - username
+        - current_password
+        - new_password
+      properties:
+        username:
+          type: string
+        current_password:
+          type: string
+        new_password:
+          type: string
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+    ConsentReceiptResponse:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - consented_date
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        consented_date:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+    VerificationCreationRequest:
+      type: object
+      required:
+        - receiver
+        - channel
+        - template_code
+      properties:
+        receiver:
+          type: string
+          description: Phone or Email receive OTP.
+        channel:
+          type: string
+          enum:
+            - PHONE
+            - EMAIL
+          default: PHONE
+        template_code:
+          type: string
+          example: SMS_OTP_REQUESTED_012
+    VerificationUpdatedRequest:
+      type: object
+      required:
+        - otp
+      properties:
+        otp:
+          type: string
+          description: The OTP in 6 digits format
+    VerificationDto:
+      type: object
+      required:
+        - id
+        - ht_id
+        - receiver
+        - channel
+        - verified
+        - expired_at
+      properties:
+        id:
+          type: string
+          example: 61665928127684fa3e8698af
+        ht_id:
+          type: string
+          example: '1630658722275094'
+        receiver:
+          type: string
+          description: Request receiver contact.
+          example: '0377884111'
+        expired_at:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+        channel:
+          type: string
+          example: PHONE
+        verified:
+          type: boolean
+          example: false
+    VerificationResponse:
+      type: object
+      properties:
+        verification:
+          $ref: '#/components/schemas/VerificationDto'
+    PersonalContactInfoResponse:
+      type: object
+      properties:
+        ht_id:
+          type: string
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactAddressInfoDto'
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+        phones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+    EmailContactInfoResponse:
+      type: object
+      required:
+        - ht_id
+        - emails
+      properties:
+        ht_id:
+          type: string
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+    AddressContactInfoResponse:
+      type: object
+      required:
+        - ht_id
+        - addresses
+      properties:
+        ht_id:
+          type: string
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactAddressInfoDto'
+    PhoneContactInfoResponse:
+      type: object
+      required:
+        - ht_id
+        - phones
+      properties:
+        ht_id:
+          type: string
+        phones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+    ContactInfoDto:
+      type: object
+      required:
+        - id
+        - value
+        - verified
+        - primary
+        - tags
+        - last_modified_date
+      properties:
+        id:
+          type: string
+        primary:
+          type: boolean
+        verified:
+          type: boolean
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+              - CONTRACT_BASE
+              - E_WALLET_BASE
+              - NEWS_AD_BASE
+        value:
+          type: string
+        last_modified_date:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+    ContactAddressInfoDto:
+      type: object
+      properties:
+        id:
+          type: string
+        primary:
+          type: boolean
+        verified:
+          type: boolean
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+              - CONTRACT_BASE
+              - E_WALLET_BASE
+              - NEWS_AD_BASE
+        value:
+          type: string
+        city:
+          type: string
+        city_code:
+          type: string
+        district:
+          type: string
+        district_code:
+          type: string
+        ward:
+          type: string
+        ward_code:
+          type: string
+        other:
+          type: string
+        last_modified_date:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+    ConsentItemInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        receiver:
+          type: string
+        expired_at:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+    SubscriptionConsentDto:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - mandatory
+        - owner
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        mandatory:
+          type: boolean
+        owner:
+          type: string
+    ProfileBasicInfoUpdateRequest:
+      type: object
+      required:
+        - last_name
+        - first_name
+        - gender
+        - dob
+      properties:
+        last_name:
+          type: string
+          maxLength: 255
+          example: Đặng
+        first_name:
+          type: string
+          maxLength: 255
+          example: Thảo Nguyên
+        gender:
+          type: string
+          enum:
+            - MALE
+            - FEMALE
+            - OTHER
+          example: FEMALE
+        dob:
+          type: string
+          example: 20/01/1990
+    BasicInfoResponseData:
+      type: object
+      properties:
+        code:
+          type: string
+          nullable: true
+          example: null
+        data:
+          type: object
+          properties:
+            ht_id:
+              type: string
+            first_name:
+              type: string
+            last_name:
+              type: string
+            dob:
+              type: string
+              example: 20/01/1990
+            gender:
+              type: string
+              enum:
+                - MALE
+                - FEMALE
+                - OTHER
+            active:
+              type: boolean
+        message:
+          type: string
+          example: The request completed successfully
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILURE
+      title: Response
+    AddPhoneNumberRequest:
+      type: object
+      required:
+        - verification_id
+        - phone
+      properties:
+        verification_id:
+          type: string
+          example: 614d40d34fe1887eac12b98a
+        phone:
+          type: string
+          example: '0912345678'
+    ContactPhoneNumberResponse:
+      type: object
+      required:
+        - ht_id
+        - phone
+      properties:
+        ht_id:
+          type: string
+        phone:
+          type: object
+          required:
+            - id
+            - value
+            - verified
+            - primary
+            - tags
+            - last_modified_date
+          properties:
+            id:
+              type: string
+            value:
+              type: string
+            verified:
+              type: boolean
+            primary:
+              type: boolean
+            tags:
+              type: array
+              items:
+                type: string
+                nullable: true
+                enum:
+                  - CONTRACT_BASE
+                  - E_WALLET_BASE
+                  - NEWS_AD_BASE
+            last_modified_date:
+              type: integer
+              format: int64
+              example: 1625454349735
+              description: Unix timestamps in miliseconds.
+    ContactAddressDto:
+      type: object
+      required:
+        - id
+        - primary
+        - verified
+        - tags
+        - value
+        - city
+        - city_code
+        - district
+        - district_code
+        - ward
+        - ward_code
+        - other
+        - last_modified_date
+      properties:
+        id:
+          type: string
+        primary:
+          type: boolean
+        verified:
+          type: boolean
+        tags:
+          uniqueItems: true
+          type: array
+          nullable: true
+          items:
+            type: string
+            enum:
+              - CONTRACT_BASE
+              - E_WALLET_BASE
+              - NEWS_AD_BASE
+          description: Tags is Enum or null
+        value:
+          type: string
+        city:
+          type: string
+        city_code:
+          type: string
+        district:
+          type: string
+        district_code:
+          type: string
+        ward:
+          type: string
+        ward_code:
+          type: string
+        other:
+          type: string
+        last_modified_date:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+    ContactAddressAddingRequest:
+      type: object
+      required:
+        - detail_address
+        - ward_code
+        - district_code
+        - city_code
+      properties:
+        detail_address:
+          type: string
+        ward_code:
+          type: string
+        district_code:
+          type: string
+        city_code:
+          type: string
+    ContactAddressUpdateRequest:
+      type: object
+      required:
+        - detail_address
+        - ward_code
+        - district_code
+        - city_code
+      properties:
+        detail_address:
+          type: string
+        ward_code:
+          type: string
+        district_code:
+          type: string
+        city_code:
+          type: string
+    ContactAddressResponse:
+      type: object
+      required:
+        - ht_id
+        - address
+      properties:
+        ht_id:
+          type: string
+        address:
+          $ref: '#/components/schemas/ContactAddressDto'
+    ContactEmailVerificationRequest:
+      type: object
+      required:
+        - verification_id
+      properties:
+        verification_id:
+          type: string
+    ContactEmailVerificationResponse:
+      type: object
+      required:
+        - ht_id
+        - emails
+      properties:
+        ht_id:
+          type: string
+        email:
+          $ref: '#/components/schemas/ContactInfoDto'
+    ContactEmailAddingRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+    ContactEmailAddingResponse:
+      type: object
+      required:
+        - ht_id
+        - emails
+      properties:
+        ht_id:
+          type: string
+        email:
+          $ref: '#/components/schemas/ContactInfoDto'

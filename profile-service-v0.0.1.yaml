@@ -1,0 +1,403 @@
+openapi: 3.0.1
+info:
+  title: Profile service
+  version: v0.0.1
+servers:
+  - url: https://{envPrefix}.citizen.com.vn/{basePath}/{version}
+    description: The root TopenID server
+    variables:
+      envPrefix:
+        enum:
+          - api-sandbox
+        default: api-sandbox
+      basePath:
+        default: api/profiles
+      version:
+        default: v0.0.1
+paths:
+  /info/{htId}/basic-info:
+    get:
+      tags:
+        - profile-info
+      operationId: findBasicInfo
+      summary: Find basic info for TopenId profile
+      parameters:
+        - name: htId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BasicInfoResponse'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+        '500':
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+  /info/{htId}/user:
+    get:
+      tags:
+        - profile-info
+      operationId: findPersonalInfoMyAccount
+      summary: Find personal information my account for Profile UI
+      parameters:
+        - name: htId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PersonalInformationResponse'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+        '500':
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+  /info/{htId}/contact:
+    get:
+      tags:
+        - profile-info
+      operationId: findContactInfo
+      summary: Get contact info for TopenId profile
+      parameters:
+        - name: htId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AllContactInfoResponse'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+        '500':
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+  /info/{htId}/contact/emails:
+    get:
+      tags:
+        - profile-info
+      operationId: getContactEmails
+      summary: Get the list of emails by htId
+      parameters:
+        - name: htId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/EmailsResponse'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+        '500':
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+  /info/{htId}/contact/phones:
+    get:
+      tags:
+        - profile-info
+      operationId: get-contact-phones
+      summary: Get the list of phones by htId
+      parameters:
+        - name: htId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PhonesResponse'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+        '500':
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+  /info/{htId}/contact/addresses:
+    get:
+      tags:
+        - profile-info
+      operationId: get-contact-addresses
+      summary: Get the list of addresses by htId
+      parameters:
+        - name: htId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AddressesResponse'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+        '500':
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+components:
+  schemas:
+    ResponseData:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          example: null
+        status:
+          type: string
+          example: SUCCESS
+          enum:
+            - SUCCESS
+            - FAILURE
+        code:
+          type: string
+          nullable: true
+          example: null
+    ErrorResponseData:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+          example: null
+          description: Data is null when we got an error.
+        status:
+          type: string
+          example: FAILURE
+          enum:
+            - SUCCESS
+            - FAILURE
+        code:
+          type: string
+          description: TBD, error code of detail error.
+    EmailsResponse:
+      type: object
+      properties:
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+    PhonesResponse:
+      type: object
+      properties:
+        phones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+    AddressesResponse:
+      type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoDto'
+    AllContactInfoResponse:
+      type: object
+      properties:
+        ht_id:
+          type: string
+        postal_addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoResponse'
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoResponse'
+        phone_numbers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfoResponse'
+        last_modified_date:
+          type: string
+          description: format yyyyMMddHHmmss
+          format: date-time
+          example: '20210707082342'
+    BasicInfoResponse:
+      type: object
+      properties:
+        ht_id:
+          type: string
+        gender:
+          type: string
+        nationalities:
+          type: array
+          items:
+            type: string
+        dob:
+          type: string
+          description: Date of birth with format yyyyMMdd
+          example: '19900519'
+        full_name:
+          type: string
+          example: Nguyễn Văn Tuấn
+        first_name:
+          type: string
+          example: Tuấn
+        last_name:
+          type: string
+          example: Nguyễn Văn
+        pob:
+          type: string
+          description: Place of birth
+        hometown:
+          type: string
+        permanent_address:
+          type: string
+        last_modified_date:
+          type: string
+          description: format yyyyMMddHHmmss
+          format: date-time
+          example: '20210707082342'
+    ContactInfoDto:
+      type: object
+      properties:
+        primary:
+          type: boolean
+        verified:
+          type: boolean
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+              - CONTRACT_BASE
+              - E_WALLET_BASE
+              - NEWS_AD_BASE
+        value:
+          type: string
+        last_modified_date:
+          type: string
+          description: format yyyyMMddHHmmss
+          format: date-time
+          example: '20210707082342'
+    ContactInfoResponse:
+      type: object
+      properties:
+        primary:
+          type: boolean
+        verified:
+          type: boolean
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+              - CONTRACT_BASE
+              - E_WALLET_BASE
+              - NEWS_AD_BASE
+        value:
+          type: string
+    PersonalInformationResponse:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: first name
+        last_name:
+          type: string
+          description: last name
+        full_name:
+          type: string
+          description: full name
+        gender:
+          type: string
+          description: gender
+        dob:
+          type: string
+          description: birthday
+        phone_number:
+          type: string
+          description: phone_number
+        email:
+          type: string
+          description: email
+        postal_address:
+          type: string
+          description: address

@@ -1,0 +1,539 @@
+openapi: 3.0.1
+info:
+  title: Auth service
+  version: v2.0.0
+servers:
+  - url: https://{envPrefix}.citizen.com.vn/{basePath}/{version}
+    description: The root TopenID server
+    variables:
+      envPrefix:
+        enum:
+          - api-sandbox
+        default: api-sandbox
+      basePath:
+        default: api/auth
+      version:
+        default: v2.0.0
+tags:
+  - name: Authentication Apis
+    description: Group of APIs to authenticate users and relying parties
+paths:
+  /token:
+    post:
+      tags:
+        - Authentication Apis
+      summary: Get access token & refresh token
+      description: |-
+        Get access token and refresh token when authenticating an user or relying parties.
+
+        Supports the following OAuth2 grant types:
+        1. Resource owner password. For common usage, require user's username and password.
+         2. Refresh tokens. For common usage, requires a refresh_token.
+        3. Client credentials. Relying parties should use this type for getting RP access token to call APIs as a backend system.
+      operationId: getToken
+      parameters:
+        - name: Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Client-Secret
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+            examples:
+              username_password:
+                summary: password
+                value:
+                  username: dat
+                  password: dat@123
+                  scope: openid
+                  grant_type: password
+              client_credentials:
+                summary: client credentials
+                value:
+                  grant_type: client_credentials
+                  scope: openid
+              refresh_token:
+                summary: refresh token
+                value:
+                  grant_type: refresh_token
+                  scope: openid
+                  refresh_token: e8ee5489-fa49-349b-8169-6d047fcd5bf2
+        required: true
+      responses:
+        '201':
+          description: CREATED
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                username_password:
+                  summary: password
+                  value:
+                    code: null
+                    data:
+                      token_type: Bearer
+                      expires_in: '3600'
+                      access_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
+                      scope: openid
+                      id_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
+                      refresh_token: e8ee5489-fa49-349b-8169-6d047fcd5bf2
+                    message: null
+                    status: SUCCESS
+                client_credentials:
+                  summary: client credentials
+                  value:
+                    code: null
+                    data:
+                      token_type: Bearer
+                      expires_in: '3600'
+                      access_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
+                      scope: openid
+                      id_token: null
+                      refresh_token: null
+                    message: null
+                    status: SUCCESS
+                refresh_token:
+                  summary: refresh token
+                  value:
+                    code: null
+                    data:
+                      token_type: Bearer
+                      expires_in: '3600'
+                      access_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
+                      scope: openid
+                      id_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
+                      refresh_token: e8ee5489-fa49-349b-8169-6d047fcd5bf2
+                    message: null
+                    status: SUCCESS
+        '400':
+          description: Bad request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              examples:
+                invalid_information:
+                  summary: Invalid information
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203025'
+                    message: Invalid information
+                client_id_missing:
+                  summary: Missing request header 'Client-Id' for method parameter of type String
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203024'
+                    message: Missing request header 'Client-Id' for method parameter of type String
+                client_secret_missing:
+                  summary: Missing request header 'Client-Secret' for method parameter of type String
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203024'
+                    message: Missing request header 'Client-Secret' for method parameter of type String
+                client_id_blank:
+                  summary: client_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_id cannot be blank
+                client_secret_blank:
+                  summary: client_secret cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_secret cannot be blank
+                grant_type_blank:
+                  summary: grant_type cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: grant_type cannot be blank
+                invalid_grant_type:
+                  summary: Unsupported grant type value
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203013'
+                    message: Unsupported grant type value
+                username_blank:
+                  summary: username cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: username cannot be blank
+                password_blank:
+                  summary: password cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: password cannot be blank
+                account_un_active:
+                  summary: Cannot authenticate an un-activated user account
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203011'
+                    message: Cannot authenticate an un-activated user account
+                refresh_token_blank:
+                  summary: refresh_token cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: refresh_token cannot be blank
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              examples:
+                invalid_user_credential:
+                  summary: Invalid client credentials
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203012'
+                    message: Invalid client credentials
+        '500':
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /introspect:
+    post:
+      tags:
+        - Authentication Apis
+      summary: Validate an access token
+      description: |-
+        For validating an access token is valid or not. Please check the field value *data.active*:
+        - true: the token is valid
+        - false: the token is invalid
+      operationId: introspectToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntrospectRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/IntrospectResponse'
+              example:
+                code: null
+                data:
+                  exp: null
+                  username: string
+                  active: true
+                  token_type: string
+                  client_id: string
+                  iat: null
+                message: null
+                status: SUCCESS
+        '400':
+          description: Bad request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              examples:
+                token_blank:
+                  summary: token cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: token cannot be blank
+        '500':
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /logout:
+    post:
+      tags:
+        - Authentication Apis
+      summary: Revoke an access token
+      description: |-
+        When user would like to log out, we revoke his access token.
+
+        **The refresh token, generated belong with this access token, would be revoke as well.**
+      operationId: revokeToken
+      parameters:
+        - name: Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Client-Secret
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeTokenRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: string
+                    properties:
+                      data:
+                        type: string
+              examples:
+                logout_successful:
+                  summary: Logout successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: null
+                    data: null
+        '400':
+          description: Bad request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              examples:
+                client_id_missing:
+                  summary: Missing request header 'Client-Id' for method parameter of type String
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203024'
+                    message: Missing request header 'Client-Id' for method parameter of type String
+                client_secret_missing:
+                  summary: Missing request header 'Client-Secret' for method parameter of type String
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203024'
+                    message: Missing request header 'Client-Secret' for method parameter of type String
+                client_id_blank:
+                  summary: client_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_id cannot be blank
+                client_secret_blank:
+                  summary: client_secret cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_secret cannot be blank
+                token_blank:
+                  summary: token can not be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: token cannot be blank
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              examples:
+                invalid_user_credential:
+                  summary: Invalid client credentials
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '203012'
+                    message: Invalid client credentials
+        '500':
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseFail'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+components:
+  schemas:
+    ResponseData:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          example: null
+        status:
+          type: string
+          example: SUCCESS
+          enum:
+            - SUCCESS
+            - FAILURE
+        code:
+          type: string
+          nullable: true
+          example: null
+    TokenRequest:
+      type: object
+      required:
+        - scope
+        - grant_type
+      properties:
+        username:
+          type: string
+          example: dat
+        password:
+          type: string
+          example: dat@12345
+        scope:
+          type: string
+          example: openid
+        grant_type:
+          type: string
+          enum:
+            - password
+            - client_credentials
+            - refresh_token
+          example: password
+        refresh_token:
+          type: string
+          example: dfhguHSDFSDIsugdsjkKDJFGDFKJ
+    IntrospectRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          example: dat
+    RevokeTokenRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          example: access_token
+    IntrospectResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        data:
+          type: object
+          properties:
+            exp:
+              type: integer
+              format: int32
+              nullable: true
+            username:
+              type: string
+            active:
+              type: boolean
+            token_type:
+              type: string
+            client_id:
+              type: string
+            iat:
+              type: integer
+              format: int32
+              nullable: true
+        message:
+          type: string
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILURE
+      title: Response
+    TokenResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        data:
+          type: object
+          properties:
+            token_type:
+              type: string
+            expires_in:
+              type: integer
+              format: int32
+            access_token:
+              type: string
+            scope:
+              type: string
+            id_token:
+              type: string
+            refresh_token:
+              type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILURE
+      title: Response
+    ResponseFail:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+          example: null
+          description: Data is null when we got an error.
+        message:
+          type: string
+          description: Information detail of status
+          example: Internal server error
+        status:
+          type: string
+          enum:
+            - FAILURE
+        code:
+          type: string
+          description: TBD, error code of detail error
+          example: '100500'

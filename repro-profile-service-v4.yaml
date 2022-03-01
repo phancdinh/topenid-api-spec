@@ -3,8 +3,7 @@ info:
   title: Profile service
   version: v4
 servers:
-  - url: https://api-sandbox.topenid.com.vn/api/profiles/v4
-    description: The root TopenID server
+  - url: Please follow the release note for further information
 tags:
   - name: Account APIs
   - name: OTP APIs

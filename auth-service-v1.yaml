@@ -2,9 +2,7 @@ openapi: 3.0.1
 info:
   title: Auth service
   version: v3
-servers:
-  - url: https://api-sandbox.topenid.com.vn/api/auth/v3
-    description: The root TopenID server
+  description: Please follow the release note for further information
 tags:
   - name: Authentication APIs
     description: Group of APIs to authenticate users and relying parties
@@ -17,14 +15,9 @@ paths:
     post:
       tags:
         - Authentication APIs
-      summary: Get access token & refresh token
+      summary: Get client access token
       description: |-
-        Get access token and refresh token when authenticating an user or relying parties.
-
-        Supports the following OAuth2 grant types:
-        1. Resource owner password. For common usage, require user's username and password.
-         2. Refresh tokens. For common usage, requires a refresh_token.
-        3. Client credentials. Relying parties should use this type for getting RP access token to call APIs as a backend system.
+        Get access token when authenticating a relying parties
       operationId: getToken
       parameters:
         - name: Client-Id
@@ -43,24 +36,11 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenRequest'
             examples:
-              username_password:
-                summary: password
-                value:
-                  username: dat
-                  password: dat@123
-                  scope: openid
-                  grant_type: password
               client_credentials:
                 summary: client credentials
                 value:
                   grant_type: client_credentials
                   scope: openid
-              refresh_token:
-                summary: refresh token
-                value:
-                  grant_type: refresh_token
-                  scope: openid
-                  refresh_token: e8ee5489-fa49-349b-8169-6d047fcd5bf2
         required: true
       responses:
         '201':
@@ -70,19 +50,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
               examples:
-                username_password:
-                  summary: password
-                  value:
-                    code: null
-                    data:
-                      token_type: Bearer
-                      expires_in: '3600'
-                      access_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
-                      scope: openid
-                      id_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
-                      refresh_token: e8ee5489-fa49-349b-8169-6d047fcd5bf2
-                    message: The request completed successfully
-                    status: SUCCESS
                 client_credentials:
                   summary: client credentials
                   value:
@@ -96,19 +63,6 @@ paths:
                       refresh_token: null
                     message: The request completed successfully
                     status: SUCCESS
-                refresh_token:
-                  summary: refresh token
-                  value:
-                    code: null
-                    data:
-                      token_type: Bearer
-                      expires_in: '3600'
-                      access_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
-                      scope: openid
-                      id_token: eyJ4NXQiOiJNell4TW1Ga09HWXdNV0kwWldObU5EY3hO...
-                      refresh_token: e8ee5489-fa49-349b-8169-6d047fcd5bf2
-                    message: The request completed successfully
-                    status: SUCCESS
         '400':
           description: Bad request
           content:
@@ -116,13 +70,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResponseFail'
               examples:
-                invalid_information:
-                  summary: Invalid information
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '203025'
-                    message: Invalid information
                 client_id_missing:
                   summary: Missing request header 'Client-Id' for method parameter of type String
                   value:
@@ -165,49 +112,6 @@ paths:
                     status: FAILURE
                     code: '203013'
                     message: Unsupported grant type value
-                username_blank:
-                  summary: username cannot be blank
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '200001'
-                    message: username cannot be blank
-                password_blank:
-                  summary: password cannot be blank
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '200001'
-                    message: password cannot be blank
-                account_un_active:
-                  summary: Cannot authenticate an un-activated user account
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '203011'
-                    message: Cannot authenticate an un-activated user account
-                refresh_token_blank:
-                  summary: refresh_token cannot be blank
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '200001'
-                    message: refresh_token cannot be blank
-                account_is_locked:
-                  summary: account is locked, return unlock_time
-                  value:
-                    data:
-                      unlock_time: 1625454349735
-                    status: FAILURE
-                    code: '203027'
-                    message: This account has been locked
-                account_is_blocked:
-                  summary: account is blocked
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '203028'
-                    message: This account has been blocked
         '401':
           description: Forbidden
           content:

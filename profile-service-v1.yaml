@@ -1,14 +1,12 @@
 openapi: 3.0.1
 info:
   title: Profile service
-  version: v3.0.0
-servers:
-  - url: https://api-sandbox.topenid.com.vn/api/profiles/v3.0.0
-    description: The root TopenID server
+  version: v4
+  description: Please follow the release note for further information
 tags:
   - name: Account APIs
   - name: OTP APIs
-  - name: Consent APIs
+  - name: Consents APIs
   - name: Contact Info APIs
 paths:
   /account/registration:
@@ -125,9 +123,9 @@ paths:
                   summary: Invalid password format
                   value:
                     data: null
-                    code: '200006'
+                    code: '200010'
                     status: FAILURE
-                    message: Password must be between 8 and 30 characters, contain characters and digits
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
                 dob_invalid_format:
                   summary: Date of birth invalid format
                   value:
@@ -149,13 +147,20 @@ paths:
                     code: '200003'
                     status: FAILURE
                     message: gender isn't in supported list
-                wrong_schema:
-                  summary: Request body invalid
+                consent_receipt_is_null:
+                  summary: consent receipt is null
                   value:
                     data: null
-                    code: '100003'
+                    code: '200001'
                     status: FAILURE
-                    message: Bad Request
+                    message: consent_receipt cannot be blank
+                invalid_consent_receipt:
+                  summary: Invalid consent receipt
+                  value:
+                    data: null
+                    code: '203022'
+                    status: FAILURE
+                    message: Invalid consent receipt
         '401':
           description: Unauthorized
           content:
@@ -192,7 +197,7 @@ paths:
                 code: '100500'
                 status: FAILURE
                 message: Error detail message
-  /account/password:
+  /account/update-password:
     put:
       tags:
         - Account APIs
@@ -250,12 +255,12 @@ paths:
                     status: FAILURE
                     message: new_password cannot be blank
                 new_password_invalid:
-                  summary: Password must be between 8 and 30 characters, contain characters and digits
+                  summary: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
                   value:
                     data: null
-                    code: '200006'
+                    code: '200010'
                     status: FAILURE
-                    message: Password must be between 8 and 30 characters, contain characters and digits
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
                 new_password_match_old_password:
                   summary: The new password cannot be the same as the current password
                   value:
@@ -281,6 +286,20 @@ paths:
                 message: Invalid access token
                 code: '203015'
                 status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
         '404':
           description: Not Found
           content:
@@ -295,15 +314,26 @@ paths:
                     code: '101101'
                     status: FAILURE
                     message: User profile was not found
-  /account/reset-password:
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /account/self-reset-password:
     patch:
       security:
         - bearerAuth: []
       tags:
         - Account APIs
       operationId: resetPassword
-      summary: RP reset password for user
-      description: This API requires RP access token
+      summary: Reset password on behalf of user
+      description: This API allows RP using the client access token to reset password on behalf of user
       requestBody:
         content:
           application/json:
@@ -356,9 +386,9 @@ paths:
                   summary: Invalid password format
                   value:
                     data: null
-                    code: '200006'
+                    code: '200010'
                     status: FAILURE
-                    message: Password must be between 8 and 30 characters, contain characters and digits
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
                 incorrect_verification:
                   summary: Incorrect verification
                   value:
@@ -377,6 +407,20 @@ paths:
                 message: Invalid access token
                 code: '203015'
                 status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
         '500':
           description: Internal server error.
           content:
@@ -387,6 +431,548 @@ paths:
                 data: null
                 code: '100500'
                 status: FAILURE
+                message: Error detail message
+  /account/force-password-reset:
+    patch:
+      security:
+        - bearerAuth: []
+      tags:
+        - Account APIs
+      operationId: forceResetPassword
+      summary: RP force reset password for user
+      description: This API requires RP access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForceResetPasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        nullable: true
+                        example: null
+              examples:
+                reset-password-successful:
+                  summary: RP reset password for user successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data: null
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                username_blank:
+                  summary: username cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: username cannot be blank
+                current_password_blank:
+                  summary: current_password cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: current_password cannot be blank
+                new_password_blank:
+                  summary: new_password cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: new_password cannot be blank
+                new_password_invalid_format:
+                  summary: Invalid password format
+                  value:
+                    data: null
+                    code: '200010'
+                    status: FAILURE
+                    message: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+                new_password_match_old_password:
+                  summary: The new password cannot be the same as the current password
+                  value:
+                    data: null
+                    code: '201001'
+                    status: FAILURE
+                    message: The new password cannot be the same as the current password
+                incorrect_username:
+                  summary: Username / Current password is incorrect
+                  value:
+                    data: null
+                    code: '203035'
+                    status: FAILURE
+                    message: Invalid user credentials
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /consent/purposes/relying-party:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Consents APIs
+      operationId: getConsentByReplyingParty
+      summary: Fetch the consent purposes list of RP
+      description: This API requires Relying Party Access Token.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SubscriptionConsentDto'
+              examples:
+                retrieve_successful:
+                  summary: Retrieve available consent items successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      - id: 6127092044a4750a8bd857ba
+                        name: Basic info sharing
+                        description: Basic info sharing
+                        mandatory: true
+                        owner: TopenId
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                access_denied:
+                  summary: Access denied
+                  value:
+                    status: FAILURE
+                    code: '203016'
+                    message: Access denied
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /account/{ht_id}/consent-receipts:
+    get:
+      parameters:
+        - name: ht_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      tags:
+        - Consents APIs
+      operationId: getConsentReceiptByHtId
+      summary: Fetch the consent receipt list of user
+      description: This API requires Relying Party Access Token.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConsentReceiptResponse'
+              examples:
+                retrieve_successful:
+                  summary: Retrieve available consent receipts successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      - id: 6127092044a4750a8bd857ba
+                        name: Thông tin tài khoản
+                        description: Truy xuất thông tin tài khoản TopenID
+                        consented_date: '1625454349735'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                ht_id_blank:
+                  summary: ht_id null or blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: ht_id cannot be blank
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                access_denied:
+                  summary: Access denied
+                  value:
+                    status: FAILURE
+                    code: '203016'
+                    message: Access denied
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: ht_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: ht_id cannot be found
+                ht_id_is_empty:
+                  summary: ht_id is empty
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200007'
+                    message: The requested resource cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /verifications:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - OTP APIs
+      operationId: createVerification
+      summary: 'Generate and deliver OTP to  receiver channel (email/ phone) '
+      description: This API requires Relying Party or user access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationCreationRequest'
+            example:
+              receiver: '0377884111'
+              channel: PHONE
+              template_code: SMS_OTP_REQUESTED_012
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationResponse'
+              examples:
+                create_verification_successful:
+                  summary: create verification successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      verification:
+                        id: 6168e5673e828a5cfc655989
+                        ht_id: '1630658722275094'
+                        receiver: '0382479888'
+                        channel: PHONE
+                        verified: 'false'
+                        expired_at: '1625454349735'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                receiver_cannot_be_blank:
+                  summary: receiver cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: receiver cannot be blank
+                receiver_format_error:
+                  summary: receiver has invalid format
+                  value:
+                    data: null
+                    code: '200002'
+                    status: FAILURE
+                    message: Invalid receiver format
+                channel_cannot_be_blank:
+                  summary: channel cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: channel cannot be blank
+                channel_invalid:
+                  summary: channel isn't in supported list
+                  value:
+                    data: null
+                    code: '200003'
+                    status: FAILURE
+                    message: channel isn't in supported list
+                template_code_cannot_be_blank:
+                  summary: template_code cannot be blank
+                  value:
+                    data: null
+                    code: '200001'
+                    status: FAILURE
+                    message: template_code cannot be blank
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '203008'
+                status: FAILURE
+                message: The number of times requesting to issue OTP have reached the limitation
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /verifications/{verification_id}:
+    patch:
+      parameters:
+        - name: verification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      tags:
+        - OTP APIs
+      operationId: updateVerification
+      summary: Request to update verification
+      description: This API requires Relying Party or user access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationUpdatedRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationResponse'
+              examples:
+                verified_otp_successful:
+                  summary: verified otp successful
+                  value:
+                    status: SUCCESS
+                    code: null
+                    message: The request completed successfully
+                    data:
+                      verification:
+                        id: 6168e5673e828a5cfc655989
+                        ht_id: '1630658722275094'
+                        receiver: '0382479888'
+                        channel: PHONE
+                        verified: 'true'
+                        expired_at: '1625454349735'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                invalid_blank_verification_id:
+                  summary: verification_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: verification_id cannot be blank
+                invalid_blank_otp:
+                  summary: otp cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: otp cannot be blank
+                verification_is_verified:
+                  summary: Incorrect verification
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '202004'
+                    message: Incorrect verification
+                incorrect_otp:
+                  summary: Incorrect OTP
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '201002'
+                    message: Incorrect OTP
+        '401':
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                status: FAILURE
+                code: '203015'
+                message: Invalid access token
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Not Found:
+                  summary: verification_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: verification_id cannot be found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                status: FAILURE
+                code: '100500'
                 message: Error detail message
   /basic-info:
     get:
@@ -556,6 +1142,45 @@ paths:
                 message: Invalid access token
                 code: '203015'
                 status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                user_profile_not_found:
+                  summary: User profile not found
+                  value:
+                    data: null
+                    code: '101101'
+                    status: FAILURE
+                    message: User profile was not found
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
   /contacts:
     get:
       tags:
@@ -919,110 +1544,6 @@ paths:
                     message: Access denied
                     code: '203016'
                     status: FAILURE
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                code: '100500'
-                status: FAILURE
-                message: Error detail message
-  /contact/phones/{phone_id}/primary:
-    put:
-      parameters:
-        - name: phone_id
-          in: path
-          required: true
-          schema:
-            type: string
-      tags:
-        - Contact Info APIs
-      security:
-        - bearerAuth: []
-      operationId: setPrimaryPhone
-      summary: Set Primary phone of an account
-      responses:
-        '200':
-          description: Ok
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ResponseData'
-                  - type: object
-                    properties:
-                      data: {}
-              examples:
-                set_primary_phone_successful:
-                  summary: Set primary phone successful
-                  value:
-                    data: null
-                    message: The request completed successfully
-                    code: null
-                    status: SUCCESS
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                contact_id_blank:
-                  summary: phone_id is blank
-                  value:
-                    data: null
-                    code: '200001'
-                    status: FAILURE
-                    message: phone_id cannot be blank
-                phone_is_primary_of_another_account:
-                  summary: Phone is primary of another account
-                  value:
-                    data: null
-                    code: '202006'
-                    status: FAILURE
-                    message: phone_id has been set as the primary contact of another account
-        '401':
-          description: Unauthorized
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                message: Invalid access token
-                code: '203015'
-                status: FAILURE
-        '403':
-          description: Forbidden
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                Access denied:
-                  summary: Access denied
-                  value:
-                    data: null
-                    message: Access denied
-                    code: '203016'
-                    status: FAILURE
-        '404':
-          description: Not Found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                Not Found:
-                  summary: phone_id cannot be found
-                  value:
-                    data: null
-                    code: '202007'
-                    status: FAILURE
-                    message: phone_id cannot be found
         '500':
           description: Internal server error.
           content:
@@ -1412,11 +1933,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                message: email_id cannot be found
-                code: '202007'
-                status: FAILURE
+              examples:
+                Not Found:
+                  summary: email_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: email_id cannot be found
+                email_id_is_empty:
+                  summary: email_id is empty
+                  value:
+                    data: null
+                    code: '200007'
+                    status: FAILURE
+                    message: The requested resource cannot be found
         '500':
           description: Internal server error.
           content:
@@ -1528,6 +2059,13 @@ paths:
                     code: '202007'
                     status: FAILURE
                     message: email_id cannot be found
+                email_id_is_empty:
+                  summary: email_id is empty
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200007'
+                    message: The requested resource cannot be found
         '500':
           description: Internal server error.
           content:
@@ -1939,16 +2477,26 @@ paths:
                     code: '203016'
                     status: FAILURE
         '404':
-          description: Address id does not belong to user
+          description: Not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                message: address_id cannot be found
-                code: '202007'
-                status: FAILURE
+              examples:
+                Not Found:
+                  summary: address_id cannot be found
+                  value:
+                    data: null
+                    code: '202007'
+                    status: FAILURE
+                    message: address_id cannot be found
+                address_id_is_empty:
+                  summary: address_id is empty
+                  value:
+                    data: null
+                    code: '200007'
+                    status: FAILURE
+                    message: The requested resource cannot be found
         '500':
           description: Internal server error.
           content:
@@ -2232,316 +2780,6 @@ paths:
                 code: '100500'
                 status: FAILURE
                 message: Error detail message
-  /verifications:
-    post:
-      security:
-        - bearerAuth: []
-      tags:
-        - OTP APIs
-      operationId: createVerification
-      summary: 'Generate and deliver OTP to  receiver channel (email/ phone) '
-      description: This API requires Relying Party or user access token
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VerificationCreationRequest'
-            example:
-              receiver: '0377884111'
-              channel: PHONE
-              template_code: SMS_OTP_REQUESTED_012
-      responses:
-        '201':
-          description: CREATED
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ResponseData'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/VerificationResponse'
-              examples:
-                create_verification_successful:
-                  summary: create verification successful
-                  value:
-                    status: SUCCESS
-                    code: null
-                    message: The request completed successfully
-                    data:
-                      verification:
-                        id: 6168e5673e828a5cfc655989
-                        ht_id: '1630658722275094'
-                        receiver: '0382479888'
-                        channel: PHONE
-                        verified: 'false'
-                        expired_at: '1625454349735'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                receiver_cannot_be_blank:
-                  summary: receiver cannot be blank
-                  value:
-                    data: null
-                    code: '200001'
-                    status: FAILURE
-                    message: receiver cannot be blank
-                receiver_format_error:
-                  summary: receiver has invalid format
-                  value:
-                    data: null
-                    code: '200002'
-                    status: FAILURE
-                    message: Invalid receiver format
-                channel_cannot_be_blank:
-                  summary: channel cannot be blank
-                  value:
-                    data: null
-                    code: '200001'
-                    status: FAILURE
-                    message: channel cannot be blank
-                channel_invalid:
-                  summary: channel isn't in supported list
-                  value:
-                    data: null
-                    code: '200003'
-                    status: FAILURE
-                    message: channel isn't in supported list
-                template_code_cannot_be_blank:
-                  summary: template_code cannot be blank
-                  value:
-                    data: null
-                    code: '200001'
-                    status: FAILURE
-                    message: template_code cannot be blank
-        '401':
-          description: Unauthorized
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                message: Invalid access token
-                code: '203015'
-                status: FAILURE
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                code: '203008'
-                status: FAILURE
-                message: The number of times requesting to issue OTP have reached the limitation
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                code: '100500'
-                status: FAILURE
-                message: Error detail message
-  /verifications/{verification_id}:
-    patch:
-      parameters:
-        - name: verification_id
-          in: path
-          required: true
-          schema:
-            type: string
-      security:
-        - bearerAuth: []
-      tags:
-        - OTP APIs
-      operationId: updateVerification
-      summary: Request to update verification
-      description: This API requires Relying Party or user access token
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VerificationUpdatedRequest'
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ResponseData'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/VerificationResponse'
-              examples:
-                verified_otp_successful:
-                  summary: verified otp successful
-                  value:
-                    status: SUCCESS
-                    code: null
-                    message: The request completed successfully
-                    data:
-                      verification:
-                        id: 6168e5673e828a5cfc655989
-                        ht_id: '1630658722275094'
-                        receiver: '0382479888'
-                        channel: PHONE
-                        verified: 'true'
-                        expired_at: '1625454349735'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                invalid_blank_verification_id:
-                  summary: verification_id cannot be blank
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '200001'
-                    message: verification_id cannot be blank
-                invalid_blank_otp:
-                  summary: otp cannot be blank
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '200001'
-                    message: otp cannot be blank
-                verification_is_verified:
-                  summary: Incorrect verification
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '202004'
-                    message: Incorrect verification
-                incorrect_otp:
-                  summary: Incorrect OTP
-                  value:
-                    data: null
-                    status: FAILURE
-                    code: '201002'
-                    message: Incorrect OTP
-        '401':
-          description: Unauthorized
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                status: FAILURE
-                code: '203015'
-                message: Invalid access token
-        '404':
-          description: Not Found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                Not Found:
-                  summary: verification_id cannot be found
-                  value:
-                    data: null
-                    code: '202007'
-                    status: FAILURE
-                    message: verification_id cannot be found
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                status: FAILURE
-                code: '100500'
-                message: Error detail message
-  /consent/purposes/relying-party:
-    get:
-      security:
-        - bearerAuth: []
-      tags:
-        - Consent APIs
-      operationId: getConsentByReplyingParty
-      summary: Fetch the consent purposes list of RP
-      description: This API requires Relying Party Access Token.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ResponseData'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/SubscriptionConsentDto'
-              examples:
-                retrieve_successful:
-                  summary: Retrieve available consent items successful
-                  value:
-                    status: SUCCESS
-                    code: null
-                    message: The request completed successfully
-                    data:
-                      - id: 6127092044a4750a8bd857ba
-                        name: Basic info sharing
-                        description: Basic info sharing
-                        mandatory: true
-                        owner: TopenId
-        '401':
-          description: Unauthorized
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                message: Invalid access token
-                code: '203015'
-                status: FAILURE
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              examples:
-                access_denied:
-                  summary: Access denied
-                  value:
-                    status: FAILURE
-                    code: '203016'
-                    message: Access denied
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseData'
-              example:
-                data: null
-                code: '100500'
-                status: FAILURE
-                message: Error detail message
 components:
   securitySchemes:
     bearerAuth:
@@ -2585,6 +2823,177 @@ components:
         code:
           type: string
           description: TBD, error code of detail error.
+    RegistrationWithPhoneRequest:
+      type: object
+      required:
+        - verification_id
+        - first_name
+        - last_name
+        - password
+        - consent_receipt
+      properties:
+        verification_id:
+          type: string
+          example: 617bab262684b5432c0ab9bf
+        first_name:
+          type: string
+          maxLength: 255
+          example: Thảo Nguyên
+        last_name:
+          type: string
+          maxLength: 255
+          example: Trần
+        password:
+          type: string
+          minLength: 8
+          maxLength: 30
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+        gender:
+          type: string
+          example: FEMALE
+          enum:
+            - MALE
+            - FEMALE
+            - OTHER
+        dob:
+          type: string
+          description: Date of birth. In format dd/MM/yyyy.
+          example: 20/01/1990
+        consent_receipt:
+          type: array
+          description: A list of consent purpose ID
+          items:
+            type: string
+            example: 61c870402b9c37dfa3220c21
+    UpdatePasswordRequest:
+      type: object
+      required:
+        - current_password
+        - new_password
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+    UpdatePasswordResponse:
+      type: object
+      required:
+        - ht_id
+      properties:
+        ht_id:
+          type: string
+    ResetPasswordRequest:
+      type: object
+      required:
+        - verification_id
+        - password
+      properties:
+        verification_id:
+          type: string
+        password:
+          type: string
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+    ForceResetPasswordRequest:
+      type: object
+      required:
+        - username
+        - current_password
+        - new_password
+      properties:
+        username:
+          type: string
+        current_password:
+          type: string
+        new_password:
+          type: string
+          description: Password must be between 8 and 30 characters, contain a digit[0-9], a lower case letter[a-z], an upper case letter[A-Z]
+          example: hgn5lnshd4A
+    ConsentReceiptResponse:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - consented_date
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        consented_date:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+    VerificationCreationRequest:
+      type: object
+      required:
+        - receiver
+        - channel
+        - template_code
+      properties:
+        receiver:
+          type: string
+          description: Phone or Email receive OTP.
+        channel:
+          type: string
+          enum:
+            - PHONE
+            - EMAIL
+          default: PHONE
+        template_code:
+          type: string
+          example: SMS_OTP_REQUESTED_012
+    VerificationUpdatedRequest:
+      type: object
+      required:
+        - otp
+      properties:
+        otp:
+          type: string
+          description: The OTP in 6 digits format
+    VerificationDto:
+      type: object
+      required:
+        - id
+        - ht_id
+        - receiver
+        - channel
+        - verified
+        - expired_at
+      properties:
+        id:
+          type: string
+          example: 61665928127684fa3e8698af
+        ht_id:
+          type: string
+          example: '1630658722275094'
+        receiver:
+          type: string
+          description: Request receiver contact.
+          example: '0377884111'
+        expired_at:
+          type: integer
+          format: int64
+          example: 1625454349735
+          description: Unix timestamps in miliseconds.
+        channel:
+          type: string
+          example: PHONE
+        verified:
+          type: boolean
+          example: false
+    VerificationResponse:
+      type: object
+      properties:
+        verification:
+          $ref: '#/components/schemas/VerificationDto'
     PersonalContactInfoResponse:
       type: object
       properties:
@@ -2709,69 +3118,6 @@ components:
           format: int64
           example: 1625454349735
           description: Unix timestamps in miliseconds.
-    VerificationCreationRequest:
-      type: object
-      required:
-        - receiver
-        - channel
-        - template_code
-      properties:
-        receiver:
-          type: string
-          description: Phone or Email receive OTP.
-        channel:
-          type: string
-          enum:
-            - PHONE
-            - EMAIL
-          default: PHONE
-        template_code:
-          type: string
-          example: SMS_OTP_REQUESTED_012
-    VerificationUpdatedRequest:
-      type: object
-      required:
-        - otp
-      properties:
-        otp:
-          type: string
-          description: The OTP in 6 digits format
-    VerificationDto:
-      type: object
-      required:
-        - id
-        - ht_id
-        - receiver
-        - channel
-        - verified
-        - expired_at
-      properties:
-        id:
-          type: string
-          example: 61665928127684fa3e8698af
-        ht_id:
-          type: string
-          example: '1630658722275094'
-        receiver:
-          type: string
-          description: Request receiver contact.
-          example: '0377884111'
-        expired_at:
-          type: integer
-          format: int64
-          example: 1625454349735
-          description: Unix timestamps in miliseconds.
-        channel:
-          type: string
-          example: PHONE
-        verified:
-          type: boolean
-          example: false
-    VerificationResponse:
-      type: object
-      properties:
-        verification:
-          $ref: '#/components/schemas/VerificationDto'
     ConsentItemInfo:
       type: object
       properties:
@@ -3048,67 +3394,3 @@ components:
           type: string
         email:
           $ref: '#/components/schemas/ContactInfoDto'
-    UpdatePasswordRequest:
-      type: object
-      required:
-        - current_password
-        - new_password
-      properties:
-        current_password:
-          type: string
-          description: Between 8 and 30 characters, contain characters and digits.
-        new_password:
-          type: string
-          description: Between 8 and 30 characters, contain characters and digits.
-    UpdatePasswordResponse:
-      type: object
-      required:
-        - ht_id
-      properties:
-        ht_id:
-          type: string
-    ResetPasswordRequest:
-      type: object
-      required:
-        - verification_id
-        - password
-      properties:
-        verification_id:
-          type: string
-        password:
-          type: string
-    RegistrationWithPhoneRequest:
-      type: object
-      required:
-        - verification_id
-        - first_name
-        - last_name
-        - password
-      properties:
-        verification_id:
-          type: string
-          example: 617bab262684b5432c0ab9bf
-        first_name:
-          type: string
-          maxLength: 255
-          example: Thảo Nguyên
-        last_name:
-          type: string
-          maxLength: 255
-          example: Trần
-        password:
-          type: string
-          minLength: 8
-          maxLength: 30
-          example: hgn5lnshd4
-        gender:
-          type: string
-          example: FEMALE
-          enum:
-            - MALE
-            - FEMALE
-            - OTHER
-        dob:
-          type: string
-          description: Date of birth. In format dd/MM/yyyy.
-          example: 20/01/1990

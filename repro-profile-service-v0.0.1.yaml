@@ -2,9 +2,7 @@ openapi: 3.0.1
 info:
   title: Profile service
   version: v0.0.1
-servers:
-  - url: https://api-sandbox.citizen.com.vn/api/profiles/v0.0.1
-    description: The root TopenID server
+  description: Please follow the release note for further information
 paths:
   /info/{htId}/basic-info:
     get:

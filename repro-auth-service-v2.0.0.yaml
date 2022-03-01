@@ -1,10 +1,8 @@
 openapi: 3.0.1
 info:
   title: Auth service
-  version: v1.0.0
-servers:
-  - url: https://api-sandbox.topenid.com.vn/api/auth/v1.0.0
-    description: The root TopenID server
+  version: v2.0.0
+  description: Please follow the release note for further information
 tags:
   - name: Authentication Apis
     description: Group of APIs to authenticate users and relying parties
@@ -117,64 +115,78 @@ paths:
                   value:
                     data: null
                     status: FAILURE
-                    code: '103000'
-                    message: Invalid information.
-                client_id_blank:
+                    code: '203025'
+                    message: Invalid information
+                client_id_missing:
                   summary: Missing request header 'Client-Id' for method parameter of type String
                   value:
                     data: null
                     status: FAILURE
-                    code: '100005'
+                    code: '203024'
                     message: Missing request header 'Client-Id' for method parameter of type String
-                client_secret_blank:
+                client_secret_missing:
                   summary: Missing request header 'Client-Secret' for method parameter of type String
                   value:
                     data: null
                     status: FAILURE
-                    code: '100005'
+                    code: '203024'
                     message: Missing request header 'Client-Secret' for method parameter of type String
+                client_id_blank:
+                  summary: client_id cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_id cannot be blank
+                client_secret_blank:
+                  summary: client_secret cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_secret cannot be blank
                 grant_type_blank:
-                  summary: grant type can not be blank
+                  summary: grant_type cannot be blank
                   value:
                     data: null
                     status: FAILURE
-                    code: '100001'
-                    message: grant type can not be blank.
+                    code: '200001'
+                    message: grant_type cannot be blank
                 invalid_grant_type:
-                  summary: Invalid grant type
+                  summary: Unsupported grant type value
                   value:
                     data: null
                     status: FAILURE
-                    code: '103005'
-                    message: Invalid grant type.
+                    code: '203013'
+                    message: Unsupported grant type value
                 username_blank:
-                  summary: Username can not be blank
+                  summary: username cannot be blank
                   value:
                     data: null
                     status: FAILURE
-                    code: '103006'
-                    message: Username can not be blank.
+                    code: '200001'
+                    message: username cannot be blank
                 password_blank:
-                  summary: Password can not be blank
+                  summary: password cannot be blank
                   value:
                     data: null
                     status: FAILURE
-                    code: '103007'
-                    message: Password can not be blank.
+                    code: '200001'
+                    message: password cannot be blank
                 account_un_active:
-                  summary: Cannot authenticate un-activate user account
+                  summary: Cannot authenticate an un-activated user account
                   value:
                     data: null
                     status: FAILURE
-                    code: '103008'
-                    message: Cannot authenticate un-activate user account.
+                    code: '203011'
+                    message: Cannot authenticate an un-activated user account
                 refresh_token_blank:
-                  summary: Refresh token can not be blank
+                  summary: refresh_token cannot be blank
                   value:
                     data: null
                     status: FAILURE
-                    code: '103011'
-                    message: Refresh token can not be blank.
+                    code: '200001'
+                    message: refresh_token cannot be blank
         '403':
           description: Forbidden
           content:
@@ -183,18 +195,23 @@ paths:
                 $ref: '#/components/schemas/ResponseFail'
               examples:
                 invalid_user_credential:
-                  summary: Invalid user credentials
+                  summary: Invalid client credentials
                   value:
                     data: null
                     status: FAILURE
-                    code: '103012'
-                    message: Invalid user credentials.
+                    code: '203012'
+                    message: Invalid client credentials
         '500':
           description: Internal Server Error
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ResponseFail'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
   /introspect:
     post:
       tags:
@@ -219,7 +236,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntrospectResponse'
               example:
-                code: string
+                code: null
                 data:
                   exp: null
                   username: string
@@ -227,7 +244,7 @@ paths:
                   token_type: string
                   client_id: string
                   iat: null
-                message: string
+                message: null
                 status: SUCCESS
         '400':
           description: Bad request
@@ -237,18 +254,23 @@ paths:
                 $ref: '#/components/schemas/ResponseFail'
               examples:
                 token_blank:
-                  summary: Token can not be blank
+                  summary: token cannot be blank
                   value:
                     data: null
                     status: FAILURE
-                    code: '103001'
-                    message: Token can not be blank.
+                    code: '200001'
+                    message: token cannot be blank
         '500':
           description: Internal Server Error
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ResponseFail'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
   /logout:
     post:
       tags:
@@ -289,20 +311,13 @@ paths:
                       data:
                         type: string
               examples:
-                logout_success_valid_token:
-                  summary: Logout successful.
+                logout_successful:
+                  summary: Logout successful
                   value:
                     status: SUCCESS
                     code: null
                     message: null
-                    data: Logout successful.
-                logout_success_invalid_token:
-                  summary: Logout successful.
-                  value:
-                    status: SUCCESS
-                    code: null
-                    message: null
-                    data: Token is invalid or not existed.
+                    data: null
         '400':
           description: Bad request
           content:
@@ -310,27 +325,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResponseFail'
               examples:
-                client_id_blank:
+                client_id_missing:
                   summary: Missing request header 'Client-Id' for method parameter of type String
                   value:
                     data: null
                     status: FAILURE
-                    code: '100005'
+                    code: '203024'
                     message: Missing request header 'Client-Id' for method parameter of type String
-                client_secret_blank:
+                client_secret_missing:
                   summary: Missing request header 'Client-Secret' for method parameter of type String
                   value:
                     data: null
                     status: FAILURE
-                    code: '100005'
+                    code: '203024'
                     message: Missing request header 'Client-Secret' for method parameter of type String
-                token_blank:
-                  summary: token can not be blank.
+                client_id_blank:
+                  summary: client_id cannot be blank
                   value:
                     data: null
                     status: FAILURE
-                    code: '100001'
-                    message: token can not be blank.
+                    code: '200001'
+                    message: client_id cannot be blank
+                client_secret_blank:
+                  summary: client_secret cannot be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: client_secret cannot be blank
+                token_blank:
+                  summary: token can not be blank
+                  value:
+                    data: null
+                    status: FAILURE
+                    code: '200001'
+                    message: token cannot be blank
         '403':
           description: Forbidden
           content:
@@ -339,18 +368,23 @@ paths:
                 $ref: '#/components/schemas/ResponseFail'
               examples:
                 invalid_user_credential:
-                  summary: Invalid user credentials
+                  summary: Invalid client credentials
                   value:
                     data: null
                     status: FAILURE
-                    code: '103012'
-                    message: Invalid user credentials.
+                    code: '203012'
+                    message: Invalid client credentials
         '500':
           description: Internal Server Error
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ResponseFail'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
 components:
   schemas:
     ResponseData:
@@ -421,6 +455,7 @@ components:
           properties:
             exp:
               type: integer
+              format: int32
               nullable: true
             username:
               type: string
@@ -432,6 +467,7 @@ components:
               type: string
             iat:
               type: integer
+              format: int32
               nullable: true
         message:
           type: string
@@ -481,10 +517,12 @@ components:
         message:
           type: string
           description: Information detail of status
+          example: Internal server error
         status:
           type: string
           enum:
             - FAILURE
         code:
           type: string
-          description: TBD, error code of detail error.
+          description: TBD, error code of detail error
+          example: '100500'

@@ -2,13 +2,13 @@ openapi: 3.0.1
 info:
   title: Profile service
   version: v4
-servers:
-  - url: Please follow the release note for further information
+  description: Please follow the release note for further information
 tags:
   - name: Account APIs
   - name: OTP APIs
   - name: Consents APIs
   - name: Contact Info APIs
+  - name: Topen Info APIs
 paths:
   /account/registration:
     post:
@@ -2781,6 +2781,343 @@ paths:
                 code: '100500'
                 status: FAILURE
                 message: Error detail message
+  /topen-info/terms:
+    get:
+      tags:
+        - Topen Info APIs
+      security:
+        - bearerAuth: [ ]
+      operationId: getTerms
+      summary: Retrieve Terms Info
+      description: This API retrieve Terms Info
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TopenInfoResponse'
+              examples:
+                success:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      type: TERMS
+                      value: String
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /topen-info/conditions:
+    get:
+      tags:
+        - Topen Info APIs
+      security:
+        - bearerAuth: [ ]
+      operationId: getConditions
+      summary: Retrieve Conditions Info
+      description: This API retrieve Conditions Info
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TopenInfoResponse'
+              examples:
+                success:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      type: CONDITIONS
+                      value: String
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /topen-info/topenid-logo:
+    get:
+      tags:
+        - Topen Info APIs
+      security:
+        - bearerAuth: [ ]
+      operationId: getTopenIdLogo
+      summary: Retrieve TopenID Logo
+      description: This API retrieve TopenID Logo
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TopenImageResponse'
+              examples:
+                success:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      type: TOPENID_LOGO
+                      value: String Base64
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /topen-info/topen-group-logo:
+    get:
+      tags:
+        - Topen Info APIs
+      security:
+        - bearerAuth: [ ]
+      operationId: getTopenGroupLogo
+      summary: Retrieve Topen Group Logo
+      description: This API retrieve Topen Group Logo
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TopenImageResponse'
+              examples:
+                success:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      type: TOPEN_GROUP_LOGO
+                      value: String Base64
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
+  /topen-info/password-pattern:
+    get:
+      tags:
+        - Topen Info APIs
+      security:
+        - bearerAuth: [ ]
+      operationId: getPasswordPattern
+      summary: Retrieve password pattern Info
+      description: This API retrieve password pattern Info
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseData'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TopenInfoResponse'
+              examples:
+                success:
+                  summary: The request completed successfully
+                  value:
+                    message: The request completed successfully
+                    data:
+                      type: PASSWORD-PATTERN
+                      value: >-
+                        Mật khẩu phải có chữ HOA, chữ thường, số và tối thiểu 8
+                        ký tự
+                    status: SUCCESS
+                    code: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                message: Invalid access token
+                code: '203015'
+                status: FAILURE
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              examples:
+                Access denied:
+                  summary: Access denied
+                  value:
+                    data: null
+                    message: Access denied
+                    code: '203016'
+                    status: FAILURE
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseData'
+              example:
+                data: null
+                code: '100500'
+                status: FAILURE
+                message: Error detail message
 components:
   securitySchemes:
     bearerAuth:
@@ -3395,3 +3732,24 @@ components:
           type: string
         email:
           $ref: '#/components/schemas/ContactInfoDto'
+    TopenInfoResponse:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+    TopenImageResponse:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+          description: Base64

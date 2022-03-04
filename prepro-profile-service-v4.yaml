@@ -9,6 +9,8 @@ tags:
   - name: Consents APIs
   - name: Contact Info APIs
   - name: Topen Info APIs
+  - name: Topen Configuration APIs
+
 paths:
   /account/registration:
     post:
@@ -3049,10 +3051,10 @@ paths:
                 code: '100500'
                 status: FAILURE
                 message: Error detail message
-  /topen-info/password-pattern:
+  '/configurations/password-pattern':
     get:
       tags:
-        - Topen Info APIs
+        - Topen Configuration APIs
       security:
         - bearerAuth: [ ]
       operationId: getPasswordPattern
@@ -3062,48 +3064,47 @@ paths:
         '200':
           description: OK
           content:
-            '*/*':
+            "*/*":
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/ResponseData'
+                  - "$ref": "#/components/schemas/ResponseData"
                   - type: object
                     properties:
                       data:
-                        $ref: '#/components/schemas/TopenInfoResponse'
+                        "$ref": "#/components/schemas/TopenPasswordPatternResponse"
               examples:
                 success:
                   summary: The request completed successfully
                   value:
                     message: The request completed successfully
                     data:
-                      type: PASSWORD-PATTERN
-                      value: >-
-                        Mật khẩu phải có chữ HOA, chữ thường, số và tối thiểu 8
-                        ký tự
+                      password: password patten
+                      message: Mật khẩu phải có chữ HOA, chữ thường, số và tối thiểu
+                        8 ký tự
                     status: SUCCESS
-                    code: null
+                    code:
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseData'
+                "$ref": "#/components/schemas/ErrorResponseData"
               example:
-                data: null
+                data:
                 message: Invalid access token
                 code: '203015'
                 status: FAILURE
         '403':
           description: Forbidden
           content:
-            '*/*':
+            "*/*":
               schema:
-                $ref: '#/components/schemas/ErrorResponseData'
+                "$ref": "#/components/schemas/ErrorResponseData"
               examples:
                 Access denied:
                   summary: Access denied
                   value:
-                    data: null
+                    data:
                     message: Access denied
                     code: '203016'
                     status: FAILURE
@@ -3112,9 +3113,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseData'
+                "$ref": "#/components/schemas/ErrorResponseData"
               example:
-                data: null
+                data:
                 code: '100500'
                 status: FAILURE
                 message: Error detail message
@@ -3741,6 +3742,16 @@ components:
         type:
           type: string
         value:
+          type: string
+    TopenPasswordPatternResponse:
+      type: object
+      required:
+        - pattern
+        - message
+      properties:
+        pattern:
+          type: string
+        message:
           type: string
     TopenImageResponse:
       type: object

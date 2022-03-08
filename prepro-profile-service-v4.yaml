@@ -3059,7 +3059,7 @@ paths:
         - bearerAuth: [ ]
       operationId: getPasswordPattern
       summary: Retrieve password pattern Info
-      description: This API retrieve password pattern Info
+      description: This API retrieve password pattern Info. This API requires RP access token
       responses:
         '200':
           description: OK

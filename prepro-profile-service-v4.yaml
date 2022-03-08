@@ -3078,7 +3078,7 @@ paths:
                   value:
                     message: The request completed successfully
                     data:
-                      password: password patten
+                      password: password pattern
                       message: Mật khẩu phải có chữ HOA [A-Z], chữ thường [a-z], số [0-9] và từ 8 đến 30 ký tự
                     status: SUCCESS
                     code:
